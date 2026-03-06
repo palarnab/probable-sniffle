@@ -1,0 +1,62 @@
+services:
+  analyzer:
+    build: ./analyzer
+    container_name: radiology-analyzer
+    env_file: ./analyzer/.env
+    environment:
+      - PORT=${ANALYZER_PORT:-4000}
+    ports:
+      - "${ANALYZER_PORT:-4000}:${ANALYZER_PORT:-4000}"
+    volumes:
+      - analyzer-weights:/app/weights
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: radiology-backend
+    env_file: ./backend/.env
+    environment:
+      - PORT=${BACKEND_PORT:-4001}
+      - AI_SERVICE_URL=http://analyzer:${ANALYZER_PORT:-4000}
+      - CORS_ORIGIN=http://localhost:${FRONTEND_PORT:-4002}
+      - MONGO_URI=mongodb://mongo:27017/radiology-copilot
+      - REDIS_HOST=redis
+    ports:
+      - "${BACKEND_PORT:-4001}:${BACKEND_PORT:-4001}"
+    depends_on:
+      - analyzer
+      - mongo
+      - redis
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ""
+    container_name: radiology-frontend
+    ports:
+      - "${FRONTEND_PORT:-4002}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: radiology-mongo
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: radiology-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  analyzer-weights:
