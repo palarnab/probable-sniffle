@@ -59,7 +59,9 @@ export default function DicomViewer() {
       },
     });
 
-    const toolGroup = ToolGroupManager.createToolGroup(TOOLGROUP_ID);
+    const toolGroup =
+      ToolGroupManager.getToolGroup(TOOLGROUP_ID) ??
+      ToolGroupManager.createToolGroup(TOOLGROUP_ID);
     toolGroupRef.current = toolGroup;
 
     toolGroup.addTool(WindowLevelTool.toolName);
@@ -83,9 +85,23 @@ export default function DicomViewer() {
   }, []);
 
   useEffect(() => {
-    setup();
+    setup().catch((err) =>
+      console.error('[DicomViewer] Setup failed:', err),
+    );
+
+    const el = elementRef.current;
+    let resizeObserver;
+    if (el) {
+      resizeObserver = new ResizeObserver(() => {
+        if (engineRef.current) {
+          engineRef.current.resize(true);
+        }
+      });
+      resizeObserver.observe(el);
+    }
 
     return () => {
+      resizeObserver?.disconnect();
       if (toolGroupRef.current) {
         ToolGroupManager.destroyToolGroup(TOOLGROUP_ID);
         toolGroupRef.current = null;
@@ -101,14 +117,21 @@ export default function DicomViewer() {
     if (!ready || !file || !engineRef.current) return;
 
     const loadImage = async () => {
-      const imageId = dicomImageLoader.wadouri.fileManager.add(file);
-      const viewport = engineRef.current.getViewport(VIEWPORT_ID);
-      await viewport.setStack([imageId]);
-      viewport.render();
+      try {
+        const imageId = dicomImageLoader.wadouri.fileManager.add(file);
+        const viewport = engineRef.current.getViewport(VIEWPORT_ID);
 
-      const { columns, rows } = viewport.getImageData?.()?.dimensions ?? {};
-      const { windowWidth, windowCenter } = viewport.getProperties?.() ?? {};
-      setViewportData({ columns, rows, windowWidth, windowCenter });
+        engineRef.current.resize(true);
+
+        await viewport.setStack([imageId]);
+        viewport.render();
+
+        const { columns, rows } = viewport.getImageData?.()?.dimensions ?? {};
+        const { windowWidth, windowCenter } = viewport.getProperties?.() ?? {};
+        setViewportData({ columns, rows, windowWidth, windowCenter });
+      } catch (err) {
+        console.error('[DicomViewer] Failed to load image:', err);
+      }
     };
 
     loadImage();

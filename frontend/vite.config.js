@@ -14,6 +14,21 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss(), wasm(), topLevelAwait()],
     resolve: {
       alias: { '@': path.resolve(__dirname, './src') },
+      dedupe: [
+        '@cornerstonejs/core',
+        '@cornerstonejs/tools',
+        '@cornerstonejs/dicom-image-loader',
+      ],
+    },
+    optimizeDeps: {
+      include: [
+        '@cornerstonejs/core',
+        '@cornerstonejs/tools',
+        '@cornerstonejs/dicom-image-loader',
+        '@cornerstonejs/codec-libjpeg-turbo-8bit',
+        '@cornerstonejs/codec-charls',
+        '@cornerstonejs/codec-openjpeg',
+      ],
     },
     worker: {
       format: 'es',

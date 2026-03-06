@@ -128,10 +128,12 @@ export default function FindingsPanel() {
         <div className="bg-panel rounded-lg p-3 space-y-1 text-xs">
           <div className="flex items-center gap-2 text-text-muted">
             <Cpu size={13} />
-            <span>{analysis?.model || '—'}</span>
+            <span>{analysis?.model?.name ?? analysis?.model ?? '—'}</span>
           </div>
-          {analysis?.modelVersion && (
-            <div className="text-text-dim pl-5">v{analysis.modelVersion}</div>
+          {(analysis?.model?.version ?? analysis?.modelVersion) && (
+            <div className="text-text-dim pl-5">
+              v{analysis.model?.version ?? analysis.modelVersion}
+            </div>
           )}
           {audit?.processingTimeMs && (
             <div className="flex items-center gap-2 text-text-dim">

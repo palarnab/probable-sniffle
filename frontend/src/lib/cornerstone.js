@@ -8,8 +8,8 @@ export async function initCornerstone() {
   if (initialized) return;
 
   await csInit();
-  cornerstoneTools.init();
-  dicomImageLoader.init();
+  await cornerstoneTools.init();
+  await dicomImageLoader.init();
 
   initialized = true;
 }

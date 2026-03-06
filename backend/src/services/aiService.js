@@ -39,7 +39,12 @@ export async function analyzeImage(buffer, metadata) {
     logger.info('AI analysis completed via live service');
     return response.data;
   } catch (err) {
-    logger.warn(`AI service unavailable (${err.message}), returning mock response`);
+    const detail = err.response?.data
+      ? JSON.stringify(err.response.data).slice(0, 500)
+      : 'no response body';
+    logger.warn(
+      `AI service error (${err.message}): ${detail} — returning mock response`,
+    );
     return buildMockResponse();
   }
 }
