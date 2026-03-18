@@ -1,4 +1,12 @@
-import { init as csInit, RenderingEngine, Enums, volumeLoader } from '@cornerstonejs/core';
+import {
+  init as csInit,
+  RenderingEngine,
+  Enums,
+  volumeLoader,
+  imageLoader,
+  metaData,
+  CONSTANTS,
+} from '@cornerstonejs/core';
 import * as cornerstoneTools from '@cornerstonejs/tools';
 import * as dicomImageLoader from '@cornerstonejs/dicom-image-loader';
 
@@ -14,4 +22,13 @@ export async function initCornerstone() {
   initialized = true;
 }
 
-export { RenderingEngine, Enums, cornerstoneTools, dicomImageLoader };
+export {
+  RenderingEngine,
+  Enums,
+  cornerstoneTools,
+  dicomImageLoader,
+  volumeLoader,
+  imageLoader,
+  metaData,
+  CONSTANTS,
+};

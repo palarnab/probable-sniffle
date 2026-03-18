@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { ImageOff } from 'lucide-react';
+import { ImageOff, AlertTriangle } from 'lucide-react';
 import {
   initCornerstone,
   RenderingEngine,
@@ -34,6 +34,7 @@ export default function DicomViewer() {
   const engineRef = useRef(null);
   const toolGroupRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   const file = useViewerStore((s) => s.currentFile);
   const activeTool = useViewerStore((s) => s.activeTool);
@@ -116,21 +117,35 @@ export default function DicomViewer() {
   useEffect(() => {
     if (!ready || !file || !engineRef.current) return;
 
+    setLoadError(null);
+
     const loadImage = async () => {
       try {
         const imageId = dicomImageLoader.wadouri.fileManager.add(file);
         const viewport = engineRef.current.getViewport(VIEWPORT_ID);
 
-        engineRef.current.resize(true);
+        const LOAD_TIMEOUT_MS = 30_000;
+        const timeout = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error(
+              'Image decode timed out — the WASM codec may have failed to load.'
+            )),
+            LOAD_TIMEOUT_MS,
+          ),
+        );
 
-        await viewport.setStack([imageId]);
+        await Promise.race([viewport.setStack([imageId]), timeout]);
+
+        engineRef.current.resize(true);
         viewport.render();
 
         const { columns, rows } = viewport.getImageData?.()?.dimensions ?? {};
         const { windowWidth, windowCenter } = viewport.getProperties?.() ?? {};
         setViewportData({ columns, rows, windowWidth, windowCenter });
       } catch (err) {
-        console.error('[DicomViewer] Failed to load image:', err);
+        const msg = err?.error?.message || err?.message || String(err);
+        console.error('[DicomViewer] Failed to load image:', msg, err);
+        setLoadError(msg);
       }
     };
 
@@ -156,9 +171,20 @@ export default function DicomViewer() {
   }, [activeTool, ready]);
 
   return (
-    <div className="relative flex-1 bg-bg overflow-hidden">
+    <div className="relative flex-1 min-w-0 min-h-0 bg-bg overflow-hidden">
       <div ref={elementRef} className="w-full h-full" />
-      {!file && (
+      {loadError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none bg-bg/80">
+          <div className="w-20 h-20 rounded-2xl bg-red-900/40 flex items-center justify-center">
+            <AlertTriangle size={36} className="text-red-400" />
+          </div>
+          <div className="text-center max-w-md px-4">
+            <p className="text-red-400 text-sm font-medium">Failed to render DICOM</p>
+            <p className="text-text-dim text-xs mt-1 break-words">{loadError}</p>
+          </div>
+        </div>
+      )}
+      {!file && !loadError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none">
           <div className="w-20 h-20 rounded-2xl bg-surface/60 flex items-center justify-center">
             <ImageOff size={36} className="text-text-dim" />

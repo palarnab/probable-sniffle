@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { Upload, List, Eye, PanelLeftClose, PanelLeft, Activity } from 'lucide-react';
+import { Upload, List, Eye, Box, PanelLeftClose, PanelLeft, Activity } from 'lucide-react';
 import useAppStore from '@/stores/appStore';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { to: '/viewer', icon: Eye, label: 'Viewer' },
+  { to: '/viewer3d', icon: Box, label: '3D Viewer' },
   { to: '/worklist', icon: List, label: 'Worklist' },
 ];
 

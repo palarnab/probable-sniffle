@@ -14,6 +14,9 @@ export const config = {
   maxFileSizeMb: parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 50,
   maxFileSizeBytes: (parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 50) * 1024 * 1024,
 
+  maxVolumeFileSizeMb: parseInt(process.env.MAX_VOLUME_FILE_SIZE_MB, 10) || 2048,
+  maxVolumeFileSizeBytes: (parseInt(process.env.MAX_VOLUME_FILE_SIZE_MB, 10) || 2048) * 1024 * 1024,
+
   mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/radiology-copilot',
 
   redisHost: process.env.REDIS_HOST || 'localhost',
