@@ -19,6 +19,9 @@ export default function VolumeUploadPanel() {
 
   const isDicomFile = (file) => {
     const name = file.name.toLowerCase();
+    if (name === 'dicomdir' || name === 'lockfile' || name === 'version') {
+      return false;
+    }
     return (
       name.endsWith('.dcm') ||
       name.endsWith('.dicom') ||

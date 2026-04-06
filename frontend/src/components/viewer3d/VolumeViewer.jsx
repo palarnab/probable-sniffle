@@ -175,24 +175,44 @@ export default function VolumeViewer() {
       setLoadError(null);
 
       try {
-        const imageIds = [];
+        const candidateIds = [];
         for (const file of files) {
           const imageId = dicomImageLoader.wadouri.fileManager.add(file);
-          imageIds.push(imageId);
+          candidateIds.push(imageId);
         }
 
-        // Parse every DICOM file so the metadata cache is populated
-        // (pixelRepresentation, spacing, orientation, etc.) before the
-        // volume loader tries to read it.
+        // Parse every DICOM file so the metadata cache is populated.
+        // Files without pixel data (DICOMDIR, SR, PR, etc.) are
+        // silently skipped instead of aborting the whole volume load.
         let prefetched = 0;
-        await Promise.all(
-          imageIds.map((id) =>
+        const total = candidateIds.length;
+        const results = await Promise.allSettled(
+          candidateIds.map((id) =>
             imageLoader.loadAndCacheImage(id).then(() => {
               prefetched += 1;
-              setLoadProgress(Math.round((prefetched / imageIds.length) * 50));
+              setLoadProgress(Math.round((prefetched / total) * 50));
+              return id;
             }),
           ),
         );
+
+        const imageIds = results
+          .filter((r) => r.status === 'fulfilled')
+          .map((r) => r.value);
+
+        const skipped = total - imageIds.length;
+        if (skipped > 0) {
+          console.warn(
+            `[VolumeViewer] Skipped ${skipped}/${total} file(s) without pixel data`,
+          );
+        }
+
+        if (imageIds.length === 0) {
+          throw new Error(
+            'None of the uploaded files contain displayable pixel data. ' +
+            'Ensure the series contains actual image slices (CT/MRI/etc.).',
+          );
+        }
 
         // Remove any previous fallback provider from an earlier load.
         if (spatialProviderRef.current) {

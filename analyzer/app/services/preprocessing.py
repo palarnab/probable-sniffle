@@ -36,8 +36,22 @@ def preprocess_dicom(dicom_bytes: bytes) -> tuple[np.ndarray, pydicom.Dataset]:
 
     normalized = pixels.astype(np.uint8)
 
+    while normalized.ndim > 3:
+        normalized = normalized[0]
+
     if normalized.ndim == 3:
-        normalized = cv2.cvtColor(normalized, cv2.COLOR_RGB2GRAY)
+        if normalized.shape[2] in (3, 4):
+            normalized = cv2.cvtColor(normalized, cv2.COLOR_RGB2GRAY)
+        else:
+            normalized = normalized[:, :, 0]
+
+    if normalized.ndim == 3:
+        normalized = normalized[0]
+
+    if normalized.ndim != 2 or normalized.size == 0:
+        raise ValueError(
+            f"Unsupported pixel array: expected a 2-D image, got shape {normalized.shape}"
+        )
 
     logger.debug(
         "DICOM preprocessed: shape=%s, photometric=%s", normalized.shape, photometric
@@ -49,6 +63,11 @@ def prepare_tensor(
     image: np.ndarray, target_size: tuple[int, int] = (224, 224)
 ) -> torch.Tensor:
     """Resize, normalise, and convert a grayscale uint8 image to a model-ready tensor."""
+
+    if image.ndim != 2 or 0 in image.shape:
+        raise ValueError(
+            f"prepare_tensor expects a non-empty 2-D grayscale image, got shape {image.shape}"
+        )
 
     resized = cv2.resize(image, target_size, interpolation=cv2.INTER_LINEAR)
 

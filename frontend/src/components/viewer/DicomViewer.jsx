@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ImageOff, AlertTriangle } from 'lucide-react';
 import {
   initCornerstone,
@@ -29,79 +29,93 @@ const TOOL_MAP = {
   length: LengthTool.toolName,
 };
 
+function waitForElementDimensions(el) {
+  return new Promise((resolve) => {
+    if (el.clientWidth > 0 && el.clientHeight > 0) {
+      resolve();
+      return;
+    }
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      if (width > 0 && height > 0) {
+        ro.disconnect();
+        resolve();
+      }
+    });
+    ro.observe(el);
+  });
+}
+
 export default function DicomViewer() {
   const elementRef = useRef(null);
   const engineRef = useRef(null);
   const toolGroupRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [loadError, setLoadError] = useState(null);
 
   const file = useViewerStore((s) => s.currentFile);
   const activeTool = useViewerStore((s) => s.activeTool);
   const setViewportData = useViewerStore((s) => s.setViewportData);
 
-  const setup = useCallback(async () => {
-    await initCornerstone();
-
-    cornerstoneTools.addTool(WindowLevelTool);
-    cornerstoneTools.addTool(ZoomTool);
-    cornerstoneTools.addTool(PanTool);
-    cornerstoneTools.addTool(LengthTool);
-
-    const engine = new RenderingEngine(RENDERING_ENGINE_ID);
-    engineRef.current = engine;
-
-    engine.enableElement({
-      viewportId: VIEWPORT_ID,
-      type: Enums.ViewportType.STACK,
-      element: elementRef.current,
-      defaultOptions: {
-        background: [0.059, 0.059, 0.102],
-      },
-    });
-
-    const toolGroup =
-      ToolGroupManager.getToolGroup(TOOLGROUP_ID) ??
-      ToolGroupManager.createToolGroup(TOOLGROUP_ID);
-    toolGroupRef.current = toolGroup;
-
-    toolGroup.addTool(WindowLevelTool.toolName);
-    toolGroup.addTool(ZoomTool.toolName);
-    toolGroup.addTool(PanTool.toolName);
-    toolGroup.addTool(LengthTool.toolName);
-
-    toolGroup.addViewport(VIEWPORT_ID, RENDERING_ENGINE_ID);
-
-    toolGroup.setToolActive(WindowLevelTool.toolName, {
-      bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
-    });
-    toolGroup.setToolActive(ZoomTool.toolName, {
-      bindings: [{ mouseButton: ToolEnums.MouseBindings.Secondary }],
-    });
-    toolGroup.setToolActive(PanTool.toolName, {
-      bindings: [{ mouseButton: ToolEnums.MouseBindings.Auxiliary }],
-    });
-
-    setReady(true);
-  }, []);
-
   useEffect(() => {
+    const el = elementRef.current;
+    if (!el) return;
+
+    let cancelled = false;
+    let resizeObserver;
+
+    const setup = async () => {
+      await initCornerstone();
+      if (cancelled) return;
+
+      await waitForElementDimensions(el);
+      if (cancelled) return;
+
+      [WindowLevelTool, ZoomTool, PanTool, LengthTool].forEach((Tool) => {
+        try { cornerstoneTools.addTool(Tool); } catch { /* already registered */ }
+      });
+
+      const engine = new RenderingEngine(RENDERING_ENGINE_ID);
+      engineRef.current = engine;
+
+      engine.enableElement({
+        viewportId: VIEWPORT_ID,
+        type: Enums.ViewportType.STACK,
+        element: el,
+        defaultOptions: {
+          background: [0.059, 0.059, 0.102],
+        },
+      });
+
+      const toolGroup =
+        ToolGroupManager.getToolGroup(TOOLGROUP_ID) ??
+        ToolGroupManager.createToolGroup(TOOLGROUP_ID);
+      toolGroupRef.current = toolGroup;
+
+      [WindowLevelTool, ZoomTool, PanTool, LengthTool].forEach((Tool) => {
+        try { toolGroup.addTool(Tool.toolName); } catch { /* already added */ }
+      });
+
+      toolGroup.addViewport(VIEWPORT_ID, RENDERING_ENGINE_ID);
+
+      if (!cancelled) setReady(true);
+    };
+
+    resizeObserver = new ResizeObserver((entries) => {
+      const { width, height } = entries[0]?.contentRect ?? {};
+      if (width > 0 && height > 0 && engineRef.current) {
+        engineRef.current.resize(true);
+      }
+    });
+    resizeObserver.observe(el);
+
     setup().catch((err) =>
       console.error('[DicomViewer] Setup failed:', err),
     );
 
-    const el = elementRef.current;
-    let resizeObserver;
-    if (el) {
-      resizeObserver = new ResizeObserver(() => {
-        if (engineRef.current) {
-          engineRef.current.resize(true);
-        }
-      });
-      resizeObserver.observe(el);
-    }
-
     return () => {
+      cancelled = true;
       resizeObserver?.disconnect();
       if (toolGroupRef.current) {
         ToolGroupManager.destroyToolGroup(TOOLGROUP_ID);
@@ -112,19 +126,22 @@ export default function DicomViewer() {
         engineRef.current = null;
       }
     };
-  }, [setup]);
+  }, []);
 
   useEffect(() => {
     if (!ready || !file || !engineRef.current) return;
 
     setLoadError(null);
+    setImageLoaded(false);
+    let cancelled = false;
 
     const loadImage = async () => {
       try {
         const imageId = dicomImageLoader.wadouri.fileManager.add(file);
-        const viewport = engineRef.current.getViewport(VIEWPORT_ID);
+        const viewport = engineRef.current?.getViewport(VIEWPORT_ID);
+        if (!viewport) throw new Error('Viewport not available');
 
-        const LOAD_TIMEOUT_MS = 30_000;
+        const LOAD_TIMEOUT_MS = 60_000;
         const timeout = new Promise((_, reject) =>
           setTimeout(
             () => reject(new Error(
@@ -135,14 +152,17 @@ export default function DicomViewer() {
         );
 
         await Promise.race([viewport.setStack([imageId]), timeout]);
+        if (cancelled) return;
 
-        engineRef.current.resize(true);
+        engineRef.current?.resize(true);
         viewport.render();
 
         const { columns, rows } = viewport.getImageData?.()?.dimensions ?? {};
         const { windowWidth, windowCenter } = viewport.getProperties?.() ?? {};
         setViewportData({ columns, rows, windowWidth, windowCenter });
+        setImageLoaded(true);
       } catch (err) {
+        if (cancelled) return;
         const msg = err?.error?.message || err?.message || String(err);
         console.error('[DicomViewer] Failed to load image:', msg, err);
         setLoadError(msg);
@@ -150,12 +170,21 @@ export default function DicomViewer() {
     };
 
     loadImage();
+    return () => { cancelled = true; };
   }, [file, ready, setViewportData]);
 
   useEffect(() => {
-    if (!toolGroupRef.current || !ready) return;
+    if (!toolGroupRef.current || !ready || !imageLoaded) return;
 
     const toolGroup = toolGroupRef.current;
+
+    toolGroup.setToolActive(ZoomTool.toolName, {
+      bindings: [{ mouseButton: ToolEnums.MouseBindings.Secondary }],
+    });
+    toolGroup.setToolActive(PanTool.toolName, {
+      bindings: [{ mouseButton: ToolEnums.MouseBindings.Auxiliary }],
+    });
+
     const cornerstoneName = TOOL_MAP[activeTool];
     if (!cornerstoneName) return;
 
@@ -168,7 +197,7 @@ export default function DicomViewer() {
     toolGroup.setToolActive(cornerstoneName, {
       bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
     });
-  }, [activeTool, ready]);
+  }, [activeTool, ready, imageLoaded]);
 
   return (
     <div className="relative flex-1 min-w-0 min-h-0 bg-bg overflow-hidden">

@@ -24,10 +24,18 @@ export default defineConfig(({ mode }) => {
       include: [
         '@cornerstonejs/core',
         '@cornerstonejs/tools',
-        '@cornerstonejs/dicom-image-loader',
+        'dicom-parser',
         '@cornerstonejs/codec-libjpeg-turbo-8bit',
+        '@cornerstonejs/codec-libjpeg-turbo-8bit/decodewasmjs',
         '@cornerstonejs/codec-charls',
+        '@cornerstonejs/codec-charls/decodewasmjs',
         '@cornerstonejs/codec-openjpeg',
+        '@cornerstonejs/codec-openjpeg/decodewasmjs',
+        '@cornerstonejs/codec-openjph',
+        '@cornerstonejs/codec-openjph/wasmjs',
+      ],
+      exclude: [
+        '@cornerstonejs/dicom-image-loader',
       ],
     },
     worker: {

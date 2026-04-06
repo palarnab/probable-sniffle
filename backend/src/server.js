@@ -15,6 +15,7 @@ import healthRouter from './routes/health.js';
 import analyzeRouter from './routes/analyze.js';
 import studiesRouter from './routes/studies.js';
 import volumesRouter from './routes/volumes.js';
+import volumeRendererRouter from './routes/volumeRenderer.js';
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/api/health', healthRouter);
 app.use('/api/analyze', analyzeRouter);
 app.use('/api/studies', studiesRouter);
 app.use('/api/volumes', volumesRouter);
+app.use('/api/volume-renderer', volumeRendererRouter);
 
 app.use(errorHandler);
 
