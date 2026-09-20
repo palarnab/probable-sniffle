@@ -1,12 +1,12 @@
 # API Reference
 
-This document covers every endpoint exposed by the Express backend (port 4000) and the Python Analyzer service (port 8000), including request/response formats and curl examples.
+This document covers every endpoint exposed by the Express backend (port 4001) and the Python Analyzer service (port 4000), including request/response formats and curl examples.
 
 ---
 
-## Express Backend (Port 4000)
+## Express Backend (Port 4001)
 
-Base URL: `http://localhost:4000`
+Base URL: `http://localhost:4001`
 
 ### GET /api/health
 
@@ -15,7 +15,7 @@ Returns the health status of the backend and its downstream dependencies.
 **Request:**
 
 ```bash
-curl http://localhost:4000/api/health
+curl http://localhost:4001/api/health
 ```
 
 **Response (200 OK):**
@@ -55,7 +55,7 @@ Upload a DICOM file for AI analysis. The backend parses DICOM metadata, forwards
 - Accepted formats: `.dcm` (DICOM), other image formats processed with limited metadata
 
 ```bash
-curl -X POST http://localhost:4000/api/analyze \
+curl -X POST http://localhost:4001/api/analyze \
   -F "file=@/path/to/chest_xray.dcm"
 ```
 
@@ -140,7 +140,7 @@ curl -X POST http://localhost:4000/api/analyze \
 Non-DICOM files (e.g., PNG, JPEG) are accepted but DICOM metadata extraction will fail gracefully. Metadata fields will show as `"Unknown"`.
 
 ```bash
-curl -X POST http://localhost:4000/api/analyze \
+curl -X POST http://localhost:4001/api/analyze \
   -F "file=@/path/to/image.png"
 ```
 
@@ -175,7 +175,7 @@ Retrieve all analyzed studies. Requires MongoDB to be connected.
 **Request:**
 
 ```bash
-curl http://localhost:4000/api/studies
+curl http://localhost:4001/api/studies
 ```
 
 **Response (200 OK):**
@@ -208,7 +208,7 @@ Retrieve a specific study by its MongoDB ObjectId.
 **Request:**
 
 ```bash
-curl http://localhost:4000/api/studies/65f1a2b3c4d5e6f7a8b9c0d1
+curl http://localhost:4001/api/studies/65f1a2b3c4d5e6f7a8b9c0d1
 ```
 
 **Response (200 OK):**
@@ -224,9 +224,9 @@ Returns the full study document including analysis results, triage information, 
 
 ---
 
-## Python Analyzer Service (Port 8000)
+## Python Analyzer Service (Port 4000)
 
-Base URL: `http://localhost:8000`
+Base URL: `http://localhost:4000`
 
 The Analyzer is an internal service called by the backend. It is not intended to be called directly by end users, but the API is documented here for development and debugging purposes.
 
@@ -237,7 +237,7 @@ Returns the health status of the Analyzer service, including GPU availability an
 **Request:**
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:4000/health
 ```
 
 **Response (200 OK):**
@@ -270,7 +270,7 @@ Accepts a base64-encoded DICOM image and returns AI inference results including 
 - Body: JSON with `image` (base64-encoded file) and `modality` (DICOM modality code)
 
 ```bash
-curl -X POST http://localhost:8000/analyze \
+curl -X POST http://localhost:4000/analyze \
   -H "Content-Type: application/json" \
   -d "{\"image\": \"$(base64 -w0 /path/to/chest_xray.dcm)\", \"modality\": \"CR\"}"
 ```
@@ -394,7 +394,7 @@ The backend emits real-time events over Socket.IO during analysis processing.
 ```javascript
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:4000");
+const socket = io("http://localhost:4001");
 
 socket.on("analysis:progress", (data) => {
   console.log(`Status: ${data.status}`);

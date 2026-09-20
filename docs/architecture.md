@@ -12,8 +12,8 @@ Radiology Copilot is a three-service architecture for AI-assisted radiology imag
   +---------------------+         +-------------------------+         +-------------------------+
   |                     |  HTTP   |                         |  HTTP   |                         |
   |   Frontend          |-------->|   Backend               |-------->|   Analyzer              |
-  |   React / Vite      |  :4000  |   Express API           |  :8000  |   FastAPI + PyTorch     |
-  |   Port 5173         |<--------|   Port 4000             |<--------|   Port 8000             |
+  |   React / Vite      |  :4001  |   Express API           |  :4000  |   FastAPI + PyTorch     |
+  |   Port 4002         |<--------|   Port 4001             |<--------|   Port 4000             |
   |                     |  JSON   |                         |  JSON   |                         |
   +---------------------+         +-------+---------+-------+         +-------------------------+
         |                                 |         |                         |
@@ -80,7 +80,7 @@ A DICOM upload follows this end-to-end path:
 
 ## Component Breakdown
 
-### Frontend — React / Vite (Port 5173)
+### Frontend — React / Vite (Port 4002)
 
 | Concern | Technology |
 |---|---|
@@ -99,7 +99,7 @@ Key UI areas:
 - **Findings Panel** — triage badge, probability bars, distribution chart, model metadata
 - **Worklist** — table of historical studies (requires MongoDB)
 
-### Backend — Express API (Port 4000)
+### Backend — Express API (Port 4001)
 
 | Concern | Technology |
 |---|---|
@@ -122,7 +122,7 @@ Responsibilities:
 - Emit real-time progress events over Socket.IO
 - Return mock AI results when the Analyzer is unreachable
 
-### Analyzer — FastAPI + PyTorch (Port 8000)
+### Analyzer — FastAPI + PyTorch (Port 4000)
 
 | Concern | Technology |
 |---|---|
@@ -165,9 +165,9 @@ Responsibilities:
 
 | Service | Port | Protocol | Description |
 |---|---|---|---|
-| Frontend | 5173 | HTTP | Vite dev server, React SPA |
-| Backend | 4000 | HTTP + WS | Express API + Socket.IO |
-| Analyzer | 8000 | HTTP | FastAPI inference service |
+| Frontend | 4002 | HTTP | Vite dev server, React SPA |
+| Backend | 4001 | HTTP + WS | Express API + Socket.IO |
+| Analyzer | 4000 | HTTP | FastAPI inference service |
 | MongoDB | 27017 | TCP | Document database (optional) |
 | Redis | 6379 | TCP | BullMQ job queue (optional) |
 

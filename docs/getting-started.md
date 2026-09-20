@@ -20,9 +20,9 @@ This guide walks through setting up and running the Radiology Copilot project fo
 
 ```
 radiology-copilot/
-├── backend/          # Node.js Express API (port 4000)
-├── frontend/         # React + Vite application (port 5173)
-├── analyzer/         # Python FastAPI AI service (port 8000)
+├── backend/          # Node.js Express API (port 4001)
+├── frontend/         # React + Vite application (port 4002)
+├── analyzer/         # Python FastAPI AI service (port 4000)
 └── docs/             # Documentation
 ```
 
@@ -38,7 +38,7 @@ npm install
 npm run dev
 ```
 
-The backend starts on **port 4000**. You should see log output confirming the server is running.
+The backend starts on **port 4001**. You should see log output confirming the server is running.
 
 ### 2. Analyzer (FastAPI + PyTorch)
 
@@ -69,7 +69,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
-The analyzer starts on **port 8000**. On first run, it will download the DenseNet-121 pretrained weights if they are not already cached.
+The analyzer starts on **port 4000**. On first run, it will download the DenseNet-121 pretrained weights if they are not already cached.
 
 ### 3. Frontend (React + Vite)
 
@@ -81,7 +81,7 @@ npm install
 npm run dev
 ```
 
-The frontend starts on **port 5173**. Open [http://localhost:5173](http://localhost:5173) in your browser.
+The frontend starts on **port 4002**. Open [http://localhost:4002](http://localhost:4002) in your browser.
 
 ---
 
@@ -104,7 +104,7 @@ Once all three services are running, verify the pipeline with these commands:
 ### 1. Check Backend Health
 
 ```bash
-curl http://localhost:4000/api/health
+curl http://localhost:4001/api/health
 ```
 
 Expected response:
@@ -126,7 +126,7 @@ The `database` field will show `"connected"` if MongoDB is running. The `aiServi
 ### 2. Check Analyzer Health
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:4000/health
 ```
 
 Expected response:
@@ -144,14 +144,14 @@ The `device` field will show `"cpu"` if no GPU is available.
 ### 3. Analyze a DICOM File
 
 ```bash
-curl -X POST http://localhost:4000/api/analyze -F "file=@sample.dcm"
+curl -X POST http://localhost:4001/api/analyze -F "file=@sample.dcm"
 ```
 
 Replace `sample.dcm` with the path to any chest X-ray DICOM file. The response will include patient metadata, AI findings, triage priority, and processing time.
 
 ### 4. Open the Frontend
 
-Navigate to [http://localhost:5173](http://localhost:5173). You should see:
+Navigate to [http://localhost:4002](http://localhost:4002). You should see:
 
 - The Radiology Copilot interface with a dark theme
 - A green health indicator dot (if backend is running)

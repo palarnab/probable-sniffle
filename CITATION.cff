@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+title: "Radiology Copilot: An Open-Source AI-Assisted Radiology Workstation"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Pal
+    given-names: Arnab
+    affiliation: "Enterprise Imaging"
+repository-code: "https://github.com/palarnab/probable-sniffle"
+abstract: >-
+  Radiology Copilot is an open-source, three-service reference implementation of
+  an AI-assisted radiology workstation. It combines a browser-based cornerstone3D
+  DICOM viewer, a Node.js orchestration API, and a Python inference service running
+  a CheXNet (DenseNet-121) model with Grad-CAM explainability across 14 chest
+  pathologies. It is research software and is not a medical device.
+keywords:
+  - radiology
+  - medical-imaging
+  - dicom
+  - deep-learning
+  - explainable-ai
+  - chexnet
+  - grad-cam
+  - cornerstone3d
+license: MIT
+references:
+  - type: article
+    title: "CheXNet: Radiologist-Level Pneumonia Detection on Chest X-Rays with Deep Learning"
+    authors:
+      - family-names: Rajpurkar
+        given-names: Pranav
+      - family-names: Irvin
+        given-names: Jeremy
+      - family-names: Zhu
+        given-names: Kaylie
+    year: 2017
+    url: "https://arxiv.org/abs/1711.05225"

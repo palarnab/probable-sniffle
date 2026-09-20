@@ -10,13 +10,13 @@ This guide explains how to use the Radiology Copilot frontend application for vi
 
 All three services must be running for full functionality:
 
-1. **Backend** (port 4000) — required for analysis
-2. **Analyzer** (port 8000) — required for real AI results (mock results available without it)
-3. **Frontend** (port 5173) — the application itself
+1. **Backend** (port 4001) — required for analysis
+2. **Analyzer** (port 4000) — required for real AI results (mock results available without it)
+3. **Frontend** (port 4002) — the application itself
 
 ### Opening the Application
 
-Navigate to [http://localhost:5173](http://localhost:5173) in a modern web browser (Chrome, Firefox, or Edge recommended).
+Navigate to [http://localhost:4002](http://localhost:4002) in a modern web browser (Chrome, Firefox, or Edge recommended).
 
 ---
 

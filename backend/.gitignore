@@ -1,7 +1,11 @@
 .env
+.env.*
+!.env-sample
 node_modules/
 npm-debug.log*
 logs/
-uploads/
 coverage/
 dist/
+
+# Uploaded DICOM files may contain PHI.
+uploads/

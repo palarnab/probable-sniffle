@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔐 Report a security vulnerability
+    url: https://github.com/palarnab/probable-sniffle/security/advisories/new
+    about: Please report vulnerabilities privately, never in a public issue.
+  - name: 💬 Ask a question or share an idea
+    url: https://github.com/palarnab/probable-sniffle/discussions
+    about: For usage questions, setup help, and open-ended discussion.
+  - name: 📖 Documentation
+    url: https://github.com/palarnab/probable-sniffle/tree/main/docs
+    about: Architecture, API reference, model details, and setup guides.

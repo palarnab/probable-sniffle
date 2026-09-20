@@ -1,4 +1,6 @@
 .env
+.env.*
+!.env-sample
 __pycache__/
 *.pyc
 *.pyo
@@ -10,4 +12,7 @@ dist/
 build/
 .venv/
 venv/
-weights/*.pth
+
+# Model weights are downloaded at runtime, never committed.
+weights/*
+!weights/.gitkeep

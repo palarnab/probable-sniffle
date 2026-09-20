@@ -1,0 +1,76 @@
+name: Bug report
+description: Report something that isn't working
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a report.
+
+        ⚠️ **Do not attach patient-identifiable data.** No DICOM files with real patient details, no un-redacted screenshots. De-identify everything first.
+
+  - type: dropdown
+    id: service
+    attributes:
+      label: Which service is affected?
+      options:
+        - Frontend (React viewer, port 4002)
+        - Backend (Express API, port 4001)
+        - Analyzer (FastAPI model service, port 4000)
+        - Docker Compose / deployment
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start services with '...'
+        2. Upload a '...' study
+        3. Click '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: input-data
+    attributes:
+      label: Input study characteristics
+      description: Describe the study **without identifying data** — modality, body part, number of slices, transfer syntax, approximate file size.
+      placeholder: "Chest X-ray, CR, single frame, Explicit VR Little Endian, ~8 MB"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Console or container output. Redact any patient details.
+      render: shell
+
+  - type: input
+    id: run-method
+    attributes:
+      label: How are you running it?
+      placeholder: "docker compose / native, OS, GPU or CPU"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have removed all patient-identifiable information from this report.
+          required: true
+        - label: I searched existing issues and this is not a duplicate.
+          required: true

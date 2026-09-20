@@ -1,5 +1,8 @@
 .env
+.env.*
+!.env-sample
 node_modules/
 npm-debug.log*
 dist/
 coverage/
+.vite/
